@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdio.h>
 
 #include <button.h>
 #include <usb_keyboard_hid.h>
