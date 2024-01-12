@@ -40,7 +40,7 @@
 // Slot 1: 6 digits
 // Slot 2: 7 digits
 // Slot 3: 8 digits
-int key_digits[NUM_KEYS] = {6, 6, 7, 8};
+int key_digits[NUM_KEYS] = {6, 6, 6, 6};
 
 typedef uint64_t counter_t;
 
@@ -227,6 +227,8 @@ static void program_secret(int slot_num, const char* secret) {
     return;
   }
 
+  printf("%s\n", plaintext_key);
+
   ret = encrypt(plaintext_key, ret, keys[slot_num].key, 64, keys[slot_num].iv);
   if (ret < 0 ) {
     printf("ERROR(%i): %s.\r\n", ret, tock_strrcode(ret));
@@ -302,6 +304,24 @@ static void get_next_code(int slot_num) {
   uint8_t key[64];
   int keylen = decrypt(keys[slot_num].iv, keys[slot_num].key, keys[slot_num].len, key, 64);
 
+  // printf("keylen %i\n", keylen);
+  // printf("%c", key[0]);
+  // printf("%c", key[1]);
+  // printf("%c", key[2]);
+  // printf("%c", key[3]);
+  // printf("%c", key[4]);
+  // printf("%c", key[5]);
+  // printf("\n");
+
+  // printf("keylen %i\n", keylen);
+  // printf("%d\n", key[0]);
+  // printf("%d\n", key[1]);
+  // printf("%d\n", key[2]);
+  // printf("%d\n", key[3]);
+  // printf("%d\n", key[4]);
+  // printf("%d\n", key[5]);
+  // printf("\n");
+
   // Generate the HMAC'ed data from the "moving factor" (timestamp in TOTP,
   // counter in HOTP), shuffled in a specific way:
   uint8_t moving_factor[sizeof(counter_t)];
@@ -314,9 +334,18 @@ static void get_next_code(int slot_num) {
   uint8_t hmac_output_buf[HMAC_OUTPUT_BUF_LEN];
   hmac(key, keylen, moving_factor, sizeof(counter_t), hmac_output_buf, HMAC_OUTPUT_BUF_LEN);
 
+  // printf("counter: %ld\n", (uint32_t) keys[slot_num].counter);
+
   // Increment the counter and save to flash
   keys[slot_num].counter++;
   save_key(slot_num);
+
+
+  // for (int j=0; j<32; j++) {
+  //   printf("%02x",hmac_output_buf[j] );
+
+  // }
+  // printf("\n");
 
   // Get output value
   uint8_t offset = hmac_output_buf[HMAC_OUTPUT_BUF_LEN - 1] & 0x0f;
