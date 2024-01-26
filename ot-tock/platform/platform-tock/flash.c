@@ -1,6 +1,10 @@
 // TODO COPYRIGHT
 
 #include<openthread/platform/flash.h>
+#include <libtock/nonvolatile_storage.h>
+
+// Why did @Tyler not include this?
+// uint32_t otPlatFlashGetSwapSize(otInstance *aInstance);
 
 void otPlatFlashInit(otInstance *aInstance) {
     // TODO
