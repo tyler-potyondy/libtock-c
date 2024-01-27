@@ -1,0 +1,49 @@
+diff --git a/Configuration.mk b/Configuration.mk
+index 4e71e02..0f6b327 100644
+--- a/Configuration.mk
++++ b/Configuration.mk
+@@ -129,7 +129,7 @@ ifndef ELF2TAB_EXISTS
+   ELF2TAB_VERSION := $(shell $(SHELL) -c "$(ELF2TAB) --version | cut -d ' ' -f 2")
+   UPGRADE_ELF2TAB := $(shell $(SHELL) -c "printf '%s\n%s\n' '$(ELF2TAB_REQUIRED_VERSION)' '$(ELF2TAB_VERSION)' | sort --check=quiet --version-sort || echo yes")
+   ifeq ($(UPGRADE_ELF2TAB),yes)
+-    $(error Failed to automatically update elf2tab, please update manually elf2tab to >= $(ELF2TAB_REQUIRED_VERSION))
++#     $(error Failed to automatically update elf2tab, please update manually elf2tab to >= $(ELF2TAB_REQUIRED_VERSION))
+   endif
+ endif
+ 
+diff --git a/shell.nix b/shell.nix
+index 640361c..da78c32 100644
+--- a/shell.nix
++++ b/shell.nix
+@@ -54,6 +54,7 @@ in
+       gcc-arm-embedded
+       python3Full
+       tockloader
++      uncrustify
+     ] ++ (lib.optionals withUnfreePkgs [
+       segger-jlink
+       tockloader.nrf-command-line-tools
+@@ -70,7 +71,7 @@ in
+             "--without-headers"
+             "--disable-shared"
+             "--disable-libssp"
+-            "--disable-multilib"
++            "--enable-multilib"
+             "--with-newlib"
+           ];
+           gcc_cv_libc_provides_ssp = "yes";
+diff --git a/tools/uncrustify/uncrustify.sh b/tools/uncrustify/uncrustify.sh
+index 285e0fd..6f69665 100755
+--- a/tools/uncrustify/uncrustify.sh
++++ b/tools/uncrustify/uncrustify.sh
+@@ -17,9 +17,7 @@ if ! command -v uncrustify >/dev/null; then
+ else
+   # Validate uncrustify version
+   VERSION=$(uncrustify --version | egrep -o '0.[0-9]+[.0-9]*')
+-  if [[ "$VERSION" != $UNCRUSTIFY_VERSION ]]; then
+-    do_install=true
+-  fi
++
+ fi
+ 
+ # install uncrustify if it's missing
