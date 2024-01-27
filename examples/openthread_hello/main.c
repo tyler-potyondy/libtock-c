@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <openthread/instance.h>
+#include <stdio.h>
 
 int main(int argc, char *argv[])
 {
