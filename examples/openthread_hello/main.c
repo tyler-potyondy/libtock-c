@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <openthread/dataset_ftd.h>
 #include <openthread/instance.h>
+#include <stdio.h>
 
 static void setNetworkConfiguration(otInstance *aInstance);
 
