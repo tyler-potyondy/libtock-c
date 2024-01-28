@@ -44,21 +44,27 @@ static void alarmTimerCallback()//(TimerHandle_t pxTimer)
 // }
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt){
+    OT_UNUSED_VARIABLE(aInstance);
     printf("alarm milli start\n");
+    printf("alarm: setting alarm %lums after %lums. It's currently %lu\n", aDt, aT0, otPlatAlarmMilliGetNow());
     alarm_at(aT0, aDt, alarmTimerCallback, (void*) 0, &alarm); // TODO: check callback
 }
 
 void otPlatAlarmMilliStop(otInstance *aInstance){
+    OT_UNUSED_VARIABLE(aInstance);
     printf("alarm milli stop\n");
     alarm_cancel(&alarm);
 }
 
 uint32_t otPlatAlarmMilliGetNow(void){
-    printf("alarm milli get now\n");
+    printf("alarm milli get now: ");
     struct timeval tv;
     gettimeasticks(&tv, NULL); // second arg is unused
     
     uint32_t nowMicro = tv.tv_usec;
-    return nowMicro / 1000;
+    uint32_t nowMilli = nowMicro / 1000;
+
+    printf("%lu\n", nowMilli);
+    return nowMilli;
 }
 
