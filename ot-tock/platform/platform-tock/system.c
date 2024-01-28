@@ -1,15 +1,16 @@
 // TODO COPYRIGHT
-#include<openthread/instance.h>
+#include <openthread-system.h>
 
-void otSysInit(int argc, char *argv[]){
+void otSysInit(int argc, char *argv[]) {
     // TODO
 }
 
-bool otSysPseudoResetWasRequested(void) { 
-    // TODO 
-    return false; 
+bool otSysPseudoResetWasRequested(void) {
+    // TODO
+    return false;
 }
 
-void otSysProcessDrivers(otInstance *aInstance){
+void otSysProcessDrivers(otInstance *aInstance) {
     // TODO
+    OT_UNUSED_VARIABLE(aInstance);
 }
