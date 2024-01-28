@@ -4,6 +4,7 @@
 #include<openthread/platform/alarm-milli.h>
 
 #include<alarm.h>
+#include<timer.h>
 #include<stdio.h>
 // TODO: need to keep track of timers on my own
 // in a static var, and have a callback which
@@ -20,6 +21,7 @@ static alarm_t           alarm       = {};
 static void alarmTimerCallback()//(TimerHandle_t pxTimer)
 {
     alarmFired = true;
+    // otPlatAlarmMilliFired(aInstance);
 }
 
 // TODO: #include <libtock/alarm.h>
@@ -46,8 +48,12 @@ static void alarmTimerCallback()//(TimerHandle_t pxTimer)
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt){
     OT_UNUSED_VARIABLE(aInstance);
     printf("alarm milli start\n");
+    // DEBUGGING:
+    aDt = 10;
+    delay_ms(1000);
+    otPlatAlarmMilliFired(aInstance);
     printf("alarm: setting alarm %lums after %lums. It's currently %lu\n", aDt, aT0, otPlatAlarmMilliGetNow());
-    alarm_at(aT0, aDt, alarmTimerCallback, (void*) 0, &alarm); // TODO: check callback
+    alarm_at(aT0, aDt, otPlatAlarmMilliFired, (void*) aInstance, &alarm); // TODO: check callback
 }
 
 void otPlatAlarmMilliStop(otInstance *aInstance){
