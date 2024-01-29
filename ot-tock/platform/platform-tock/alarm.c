@@ -49,11 +49,12 @@ void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt){
     OT_UNUSED_VARIABLE(aInstance);
     printf("alarm milli start\n");
     // DEBUGGING:
+    printf("alarm: setting alarm %lums after %lums. It's currently %lu\n", aDt, aT0, otPlatAlarmMilliGetNow());
     aDt = 10;
     delay_ms(1000);
     otPlatAlarmMilliFired(aInstance);
-    printf("alarm: setting alarm %lums after %lums. It's currently %lu\n", aDt, aT0, otPlatAlarmMilliGetNow());
     alarm_at(aT0, aDt, otPlatAlarmMilliFired, (void*) aInstance, &alarm); // TODO: check callback
+                                                                          // this needs to be in clock units, not ms
 }
 
 void otPlatAlarmMilliStop(otInstance *aInstance){
