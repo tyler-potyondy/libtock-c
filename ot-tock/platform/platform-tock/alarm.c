@@ -68,10 +68,10 @@ uint32_t otPlatAlarmMilliGetNow(void){
     struct timeval tv;
     gettimeasticks(&tv, NULL); // second arg is unused
     
+    uint32_t nowSeconds = tv.tv_sec;
     uint32_t nowMicro = tv.tv_usec;
-    uint32_t nowMilli = nowMicro / 1000;
+    uint32_t nowMilli32bit = (nowSeconds * 1000) + (nowMicro / 1000);
 
-    printf("%lu\n", nowMilli);
-    return nowMilli;
+    printf("%lu\n", nowMilli32bit);
+    return nowMilli32bit;
 }
-
