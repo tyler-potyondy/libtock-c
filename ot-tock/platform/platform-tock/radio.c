@@ -42,35 +42,35 @@ otError otPlatRadioEnable(otInstance *aInstance) {
     // TODO
     OT_UNUSED_VARIABLE(aInstance);
     printf("%s:%d in %s", __FILE__, __LINE__, __func__);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatRadioDisable(otInstance *aInstance) {
     // TODO
     OT_UNUSED_VARIABLE(aInstance);
     printf("%s:%d in %s", __FILE__, __LINE__, __func__);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatRadioSleep(otInstance *aInstance) {
     // TODO
     OT_UNUSED_VARIABLE(aInstance);
     printf("%s:%d in %s", __FILE__, __LINE__, __func__);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel) {
     // TODO
     OT_UNUSED_VARIABLE(aInstance);
     printf("%s:%d in %s", __FILE__, __LINE__, __func__);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame) {
     // TODO
     OT_UNUSED_VARIABLE(aInstance);
     printf("%s:%d in %s", __FILE__, __LINE__, __func__);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance) {
@@ -117,28 +117,28 @@ otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, uint16_t aShortA
     // TODO
     OT_UNUSED_VARIABLE(aInstance);
     printf("%s:%d in %s", __FILE__, __LINE__, __func__);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress) {
     // TODO
     OT_UNUSED_VARIABLE(aInstance);
     printf("%s:%d in %s", __FILE__, __LINE__, __func__);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, uint16_t aShortAddress) {
     // TODO
     OT_UNUSED_VARIABLE(aInstance);
     printf("%s:%d in %s", __FILE__, __LINE__, __func__);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress) {
     // TODO
     OT_UNUSED_VARIABLE(aInstance);
     printf("%s:%d in %s", __FILE__, __LINE__, __func__);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance) {
@@ -157,35 +157,35 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     // TODO
     OT_UNUSED_VARIABLE(aInstance);
     printf("%s:%d in %s", __FILE__, __LINE__, __func__);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower) {
     // TODO
     OT_UNUSED_VARIABLE(aInstance);
     printf("%s:%d in %s", __FILE__, __LINE__, __func__);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower) {
     // TODO
     OT_UNUSED_VARIABLE(aInstance);
     printf("%s:%d in %s", __FILE__, __LINE__, __func__);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold) {
     // TODO
     OT_UNUSED_VARIABLE(aInstance);
     printf("%s:%d in %s", __FILE__, __LINE__, __func__);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold) {
     // TODO
     OT_UNUSED_VARIABLE(aInstance);
     printf("%s:%d in %s", __FILE__, __LINE__, __func__);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance) {
