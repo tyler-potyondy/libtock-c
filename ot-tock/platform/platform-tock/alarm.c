@@ -1,6 +1,7 @@
 // TODO ADD COPYRIGHT ETC
 
 #include <alarm.h>
+#include <internal/alarm.h>
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 #include <stdio.h>
@@ -16,15 +17,26 @@ static void callback(int now, int interval, int arg2, void *aInstance) {
     otPlatAlarmMilliFired(aInstance);
 }
 
+// convert ms to physical clock ticks
+static uint32_t milliToTicks(uint32_t milli) {
+    uint32_t frequency;
+    alarm_internal_frequency(&frequency);
+    
+    return milli * frequency;
+}
+
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt){
     OT_UNUSED_VARIABLE(aInstance);
     printf("alarm milli start\n");
     // DEBUGGING:
     printf("alarm: setting alarm %lums after %lums. It's currently %lu\n", aDt, aT0,
            otPlatAlarmMilliGetNow());
-    // aDt = 10;
-    int return_code = alarm_at(aT0, aDt, callback, (void *)aInstance, &alarm);
-                       // this needs to be in clock units, not ms
+    
+    // inputs aT0, aDt are in ms, but libtock call must be in clock ticks
+    int return_code = alarm_at(milliToTicks(aT0), milliToTicks(aDt), callback, (void *)aInstance, &alarm);
+    // NOTE: This is a big problem that will have to be fixed. Thread wants to be able to set a 2^30
+    // millisecond timer. However, the overflow into clock ticks will mean this performs significantly
+    // difficulty.
 
     printf("alarm returncode %d\n", return_code);
 }
@@ -46,7 +58,6 @@ uint32_t otPlatAlarmMilliGetNow(void) {
 
     printf("%lu\n", nowMilli32bit);
     return nowMilli32bit;
-    // return 0;
 }
 
 // Symmetric implementation for microsecond alarm
