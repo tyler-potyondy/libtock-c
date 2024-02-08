@@ -1,11 +1,12 @@
 // TODO COPYRIGHT
 
+#include <ieee802154.h>
 #include <openthread/platform/radio.h>
 #include <stdio.h>
 
 // Some functions require returning pointer to an otRadioFrame (TODO)
-static otRadioFrame tempFrame;
-static otRadioCaps tempRadioCaps;
+static otRadioFrame tempTransmitBuffer;
+static otRadioCaps tempRadioCaps = 0;
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64) {
     // TODO
@@ -20,40 +21,57 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanid) {
 }
 
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress) {
-    // TODO
     OT_UNUSED_VARIABLE(aInstance);
     printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
+
+    int retCode = ieee802154_set_address_long((unsigned char*) aExtAddress);
+    if (retCode != 0) printf("Error setting long address");
 }
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress) {
-    // TODO
     OT_UNUSED_VARIABLE(aInstance);
     printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
+
+    int retCode = ieee802154_set_address(aShortAddress);
+    if (retCode != 0) printf("Error setting address");
 }
 
 bool otPlatRadioIsEnabled(otInstance *aInstance) {
-    // TODO
     OT_UNUSED_VARIABLE(aInstance);
     printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
-    return true;
+
+    return ieee802154_is_up();
 }
 
 otError otPlatRadioEnable(otInstance *aInstance) {
-    // TODO
     OT_UNUSED_VARIABLE(aInstance);
     printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
-    return OT_ERROR_NONE;
+
+    int retCode = ieee802154_up();
+    if (retCode == 0)
+        return OT_ERROR_NONE;
+    else {
+        printf("Initializing Radio Failed!\n");
+        return OT_ERROR_FAILED;
+    }
 }
 
 otError otPlatRadioDisable(otInstance *aInstance) {
-    // TODO
     OT_UNUSED_VARIABLE(aInstance);
     printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
-    return OT_ERROR_NONE;
+
+    int retCode = ieee802154_down();
+
+    if (retCode == 0)
+        return OT_ERROR_NONE;
+    else {
+        printf("Disable Radio Failed!\n");
+        return OT_ERROR_FAILED;
+    }
 }
 
 otError otPlatRadioSleep(otInstance *aInstance) {
-    // TODO
+    // TODO: There is no sleep function.
     OT_UNUSED_VARIABLE(aInstance);
     printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
     return OT_ERROR_NONE;
@@ -77,7 +95,8 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance) {
     // TODO
     OT_UNUSED_VARIABLE(aInstance);
     printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
-    return &tempFrame;
+
+    return &tempTransmitBuffer;
 }
 
 int8_t otPlatRadioGetRssi(otInstance *aInstance) {
@@ -88,7 +107,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance) {
 }
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance) {
-    // TODO
+    // TODO: This is temporarily saying there are no capabilities.
     OT_UNUSED_VARIABLE(aInstance);
     printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
     return tempRadioCaps;

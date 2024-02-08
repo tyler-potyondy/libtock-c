@@ -42,13 +42,13 @@ int main(int argc, char *argv[])
     /* Start the Thread stack (CLI cmd > thread start) */
     otThreadSetEnabled(instance, true);
 
-    for(;;)
+    for(int i = 0;;i++)
     {
         /* Until the platform library files are implemented, this will not
         be called. With the empty platform files, the Instance() constructor 
         that is called within the otInstanceInit function hangs. */
-        printf("looping...\n");
-	
+        if (i % 1000000 == 0) fprintf(stderr, ".");
+
         otTaskletsProcess(instance);
         otSysProcessDrivers(instance); 
     
