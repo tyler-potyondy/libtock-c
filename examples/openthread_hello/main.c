@@ -7,17 +7,22 @@ static void setNetworkConfiguration(otInstance *aInstance);
 
 int main(int argc, char *argv[])
 {
+    printf("-11-1-1-1-1\n");
     size_t   otInstanceBufferLength = 0;
     uint8_t *otInstanceBuffer       = NULL;
 
     otInstance *instance;
+    printf("0000\n");
 
     // obtain required buffer size
     (void)otInstanceInit(NULL, &otInstanceBufferLength);
 
+    printf("1111 \n");
     // Call to allocate the buffer
     otInstanceBuffer = (uint8_t *)malloc(otInstanceBufferLength);
     assert(otInstanceBuffer);
+
+    printf("about to enter constructor\n");
 
     // Initialize OpenThread with the buffer
     /* Hangs within the below function call (see comment in loop)*/
@@ -41,20 +46,34 @@ int main(int argc, char *argv[])
 
     /* Start the Thread stack (CLI cmd > thread start) */
     otThreadSetEnabled(instance, true);
+    printf("Got past otInstanceInit\n");
+    testFlashPAL(instance);
 
-    for(int i = 0;;i++)
+    for(;;)
     {
         /* Until the platform library files are implemented, this will not
         be called. With the empty platform files, the Instance() constructor 
         that is called within the otInstanceInit function hangs. */
-        if (i % 1000000 == 0) fprintf(stderr, ".");
-
+        // printf("looping...\n");
+	
         otTaskletsProcess(instance);
         otSysProcessDrivers(instance); 
     
     }
 
     return 0;
+}
+
+void testFlashPAL(otInstance *aInstance) {
+    otPlatFlashInit();
+
+    char write_buf[26] = "Hello from flash storage!";
+    char read_buf[26];
+
+    otPlatFlashWrite(aInstance, 0, 0, write_buf, sizeof(write_buf));
+    otPlatFlashRead(aInstance, 0, 0, read_buf, sizeof(read_buf));
+
+    printf("got back %s from flash\n", read_buf);
 }
 
 /**
