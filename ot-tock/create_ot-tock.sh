@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/usr/bin/env bash
 
 ## NOTE: this script expects to be invoked from the ot-tock base directory. ## 
 
