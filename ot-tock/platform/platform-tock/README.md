@@ -7,3 +7,4 @@ Statuses:
 - `radio`: **a lot of work**
 - `flash`: Done and untested
 - `alarm-milli`: Done and untested
+- `system`: Done, but with temp implementations as there's no functionality in here
