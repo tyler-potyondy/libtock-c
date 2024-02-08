@@ -24,12 +24,12 @@ static void write_done(int length, __attribute__((unused)) int arg1,
 
 void otPlatFlashInit(otInstance *aInstance) {
     OT_UNUSED_VARIABLE(aInstance);
-    printf("%s:%d in %s", __FILE__, __LINE__, __func__);
+    printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
 }
 
 void otPlatFlashErase(otInstance *aInstance, uint8_t aSwapIndex) {
     OT_UNUSED_VARIABLE(aInstance);
-    printf("%s:%d in %s", __FILE__, __LINE__, __func__);
+    printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
 
     int num_bytes;
     nonvolatile_storage_internal_get_number_bytes(&num_bytes);
@@ -47,7 +47,7 @@ void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffse
                       const void *aData, uint32_t aSize) {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aSwapIndex);
-    printf("%s:%d in %s", __FILE__, __LINE__, __func__);
+    printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
     int ret;
 
     // Sets up the buffer to store the output of the read
@@ -77,7 +77,7 @@ void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset
                      uint32_t aSize) {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aSwapIndex);
-    printf("%s:%d in %s", __FILE__, __LINE__, __func__);
+    printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
     int ret;
 
     // Sets up the buffer to store the output of the read

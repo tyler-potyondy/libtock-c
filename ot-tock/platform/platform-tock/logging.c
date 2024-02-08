@@ -13,6 +13,6 @@ OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const 
     OT_UNUSED_VARIABLE(aLogLevel);
     OT_UNUSED_VARIABLE(aLogRegion);
     OT_UNUSED_VARIABLE(aFormat);
-    printf("%s:%d in %s", __FILE__, __LINE__, __func__);
+    printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
 }
 #endif
