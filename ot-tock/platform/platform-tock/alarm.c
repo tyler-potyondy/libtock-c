@@ -34,9 +34,11 @@ void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt){
     
     // inputs aT0, aDt are in ms, but libtock call must be in clock ticks
     int return_code = alarm_at(milliToTicks(aT0), milliToTicks(aDt), callback, (void *)aInstance, &alarm);
-    // NOTE: This is a big problem that will have to be fixed. Thread wants to be able to set a 2^30
-    // millisecond timer. However, the overflow into clock ticks will mean this performs significantly
-    // difficulty.
+    // NOTE: This is a big problem that will have to be fixed. Thread wants to
+    // be able to set a 2^30 millisecond timer. However, when converting
+    // milliseconds into clock ticks, the multiplication will overflow.
+    // 
+    // OpenThread expects to be able to use the full 32 bit range in milliseconds.
 
     printf("alarm returncode %d\n", return_code);
 }
