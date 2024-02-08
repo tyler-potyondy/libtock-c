@@ -18,6 +18,11 @@ int main(int argc, char *argv[]) {
 
     for (int i = 0; i < NUM_SAMPLES; i++) {
         int cur_time_ms = otPlatAlarmMilliGetNow();
+#if FALSE
+        if (cur_time_ms % 1000 > 128) {
+            printf("trigger %lu on %d", cur_time_ms);
+        }
+#endif
         clock_return[i] = cur_time_ms;
         delay_ms(1);
     }
@@ -25,7 +30,7 @@ int main(int argc, char *argv[]) {
     // print results
     for (int i = 0; i < NUM_SAMPLES; i++) {
         uint32_t item = clock_return[i];
-        printf("item %d:\t %lu\n", i, item);  // output wraps around at about 128
+        printf("item \t%d:\t %lu\n", i, item);  // output wraps around at about 128
     }
     uint32_t frequency, now;
 
