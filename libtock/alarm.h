@@ -16,7 +16,7 @@
  *       printf("%s\n", str);
  *     }
  *
- *     uint32_t frequency = alarm_frequency();
+ *     uint32_t frequency = alarm_internal_frequency();
  *     uint32_t now = alarm_now();
  *     static alarm_t alarm;
  *     alarm_at(now + frequency, callback, (void*)"1 second elapsed", &alarm);
@@ -51,7 +51,8 @@ typedef struct alarm {
 /** \brief Create a new alarm to fire at a particular clock value.
  *
  * The `alarm` parameter is allocated by the caller and must live as long as
- * the alarm is outstanding.
+ * the alarm is outstanding. `reference` and `dt` are in terms of the tick
+ * time.
  *
  * \param reference: the reference time from which the alarm is being set
  * \param dt: the time after reference that the alarm should fire
