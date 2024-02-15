@@ -47,7 +47,6 @@ int main(int argc, char *argv[])
     /* Start the Thread stack (CLI cmd > thread start) */
     otThreadSetEnabled(instance, true);
     printf("Got past otInstanceInit\n");
-    testFlashPAL(instance);
 
     for(;;)
     {
@@ -62,18 +61,6 @@ int main(int argc, char *argv[])
     }
 
     return 0;
-}
-
-void testFlashPAL(otInstance *aInstance) {
-    otPlatFlashInit();
-
-    char write_buf[26] = "Hello from flash storage!";
-    char read_buf[26];
-
-    otPlatFlashWrite(aInstance, 0, 0, write_buf, sizeof(write_buf));
-    otPlatFlashRead(aInstance, 0, 0, read_buf, sizeof(read_buf));
-
-    printf("got back %s from flash\n", read_buf);
 }
 
 /**
