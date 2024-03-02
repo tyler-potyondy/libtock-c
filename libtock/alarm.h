@@ -64,6 +64,22 @@ typedef struct alarm {
  */
 int alarm_at(uint32_t reference, uint32_t dt, subscribe_upcall, void*, alarm_t *alarm);
 
+/** \brief Create a new alarm to fire some number of milliseconds from a .
+ *
+ * The `alarm` parameter is allocated by the caller and must live as long as
+ * the alarm is outstanding. `reference` and `dt` are in terms of the tick
+ * time.
+ *
+ * \param reference_ms: the reference time from which the alarm is being set
+ * \param dt_ms: the time after reference that the alarm should fire
+ * \param callback a callback to be invoked when the alarm expires.
+ * \param userdata passed to the callback.
+ * \param a pointer to a new alarm_t to be used by the implementation to keep
+ *        track of the alarm.
+ * \return An error code. Either RETURNCODE_SUCCESS or RETURNCODE_FAIL.
+ */
+int alarm_at_ms(uint32_t reference_ms, uint32_t dt_ms, subscribe_upcall, void*, alarm_t *alarm);
+
 /** \brief Cancels an existing alarm.
  *
  * The caller is responsible for freeing the `alarm_t`.

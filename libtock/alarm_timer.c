@@ -106,6 +106,84 @@ int alarm_at(uint32_t reference, uint32_t dt, subscribe_upcall cb, void* ud, ala
   return RETURNCODE_SUCCESS;
 }
 
+uint32_t ticks_to_ms(uint32_t ticks) {
+  uint32_t frequency;
+  alarm_internal_frequency(&frequency);
+
+  return (ticks / frequency) * 1000;
+}
+
+uint32_t ms_to_ticks(uint32_t ms) {
+
+}
+
+// user data to pass down if we are handling an alarm
+// that would normally overflow
+typedef struct overflow_ud { 
+  // how many times the underlying alarm has left to overflow
+  // before we reach our alarm target
+  int overflows_left;
+  // number of remaining ticks after the alarm is done overflowing
+  int remainder_ticks;
+  // need to have an unused 
+  __attribute__ ((unused)) int  unused;
+  // original user data passed into alarm_at_ms
+  void* original_ud;
+  subscribe_upcall* original_cb;
+  alarm_t* alarm;
+} overflow_ud_t; 
+
+static void overflow_callback(int   last_timer_fire_time,
+                      __attribute__ ((unused)) int   unused1,
+                      __attribute__ ((unused)) int   unused2,
+                      void* ud) {
+
+  const uint32_t max_ticks = ~0b0;
+  overflow_ud_t* our_ud = (overflow_ud_t*)ud;
+
+  if (our_ud->overflows_left == 0) {
+    alarm_at(
+      last_timer_fire_time, 
+      our_ud->remainder_ticks,
+      our_ud->original_cb,
+      our_ud->original_ud,
+      our_ud->alarm
+    );
+  } else {
+
+    our_ud->overflows_left--;
+
+    alarm_at(
+      last_timer_fire_time, 
+      max_ticks,
+      overflow_callback,
+      our_ud,
+      our_ud->alarm
+    );
+  }
+}
+
+int alarm_at_ms(uint32_t reference_ms, uint32_t dt_ms, subscribe_upcall cb, void* ud, alarm_t* alarm) {
+  /**
+   * TODO: add a comment explaining how we are handling overflow with a chain of callbacks
+  */
+  const uint32_t max_ticks = ~0b0;
+
+  void* tmp_ud;
+
+  /**
+   * The counter can only count up to 2^32 ticks. We might want to set a counter that's 
+   * more than 2^32 ticks. Here, we check if we want to set a timer in ms that is more than
+   * 2^32 ticks.
+  */
+  if (dt_ms > ticks_to_ms(max_ticks)){
+    return alarm_at(ms_to_ticks(reference_ms), max_ticks, (subscribe_upcall*)overflow_callback, tmp_ud, alarm);
+  } else {
+    // TODO: handle the case if reference_ms is > 2^32 ticks
+    return alarm_at(ms_to_ticks(reference_ms), ms_to_ticks(dt_ms), cb, ud, alarm);
+  }
+}
+
 void alarm_cancel(alarm_t* alarm) {
   if (alarm->prev != NULL) {
     alarm->prev->next = alarm->next;
