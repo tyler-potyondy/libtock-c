@@ -54,8 +54,8 @@ typedef struct alarm {
  * the alarm is outstanding. `reference` and `dt` are in terms of the tick
  * time.
  *
- * \param reference: the reference time from which the alarm is being set
- * \param dt: the time after reference that the alarm should fire
+ * \param reference: the reference time from which the alarm is being set in ticks
+ * \param dt: the time after reference that the alarm should fire in ticks
  * \param callback a callback to be invoked when the alarm expires.
  * \param userdata passed to the callback.
  * \param a pointer to a new alarm_t to be used by the implementation to keep
@@ -69,6 +69,7 @@ int alarm_at(uint32_t reference, uint32_t dt, subscribe_upcall, void*, alarm_t *
  * The `alarm` parameter is allocated by the caller and must live as long as
  * the alarm is outstanding. `reference` and `dt` are in terms of the tick
  * time.
+ * Fine grained timers should use `alarm_at`. Explain why this has less precision.
  *
  * \param reference_ms: the reference time from which the alarm is being set
  * \param dt_ms: the time after reference that the alarm should fire

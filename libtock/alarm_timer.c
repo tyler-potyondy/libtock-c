@@ -179,7 +179,24 @@ static void overflow_callback(int   last_timer_fire_time,
     );
   }
 }
-
+                                                         
+/*                                                   
+ reference time─────────────── ──┐                       
+                                 │                       
+ ┌─────────────────────────┐     │                       
+ │                         │     │                       
+ │  Kernel context         │     │ `dt`                  
+ │  switches to another    │     │ delta time -          
+ │  process                │     │   length the timer    
+ │                         │     │   should run for      
+ │                         │   ──┘                       
+ │                         │                             
+ └─────────────────────────┘                         
+ Timer gets started───────────   
+******Timer should not run for dt, instead return immediately*********                        
+*/                                           
+                                                         
+                                                         
 int alarm_at_ms(uint32_t reference_ms, uint32_t dt_ms, subscribe_upcall cb, void* ud, alarm_t* alarm) {
   /**
    * TODO: add a comment explaining how we are handling overflow with a chain of callbacks
@@ -215,6 +232,13 @@ int alarm_at_ms(uint32_t reference_ms, uint32_t dt_ms, subscribe_upcall cb, void
    * The counter can only count up to 2^32 ticks. We might want to set a counter that's 
    * more than 2^32 ticks. Here, we check if we want to set a timer in ms that is more than
    * 2^32 ticks.
+   * 
+   * NOTE: `alarm_at_ms` is going to ignore the passed in `reference_ms`.
+   * If a timer is in milliseconds, then context switching overhead is negligible.
+   * We do not handle the case of overshooting `dt_ms` by checking against the reference time.
+   * There is no free runnning millisecond timer, so we cannot check if the time in ticks has
+   * overflowed since the reference time was checked. (refer to above diagram)
+   * It is user error to hold onto a timer and not schedule it.
   */
   if (dt_ms > ticks_to_ms(MAX_TICKS)){
     printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);

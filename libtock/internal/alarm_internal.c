@@ -5,10 +5,10 @@ int alarm_internal_subscribe(subscribe_upcall cb, void *userdata) {
   return tock_subscribe_return_to_returncode(sval);
 }
 
-int alarm_internal_set(uint32_t reference, uint32_t tics) {
-  syscall_return_t rval = command(DRIVER_NUM_ALARM, 6, reference, tics);
-  uint32_t rc;
-  return tock_command_return_u32_to_returncode(rval, &rc);
+int alarm_internal_set(uint32_t reference, uint32_t ticks) {
+  syscall_return_t rval = command(DRIVER_NUM_ALARM, 6, reference, ticks);
+  uint32_t rc; // uninitialized address?
+  return tock_command_return_u32_to_returncode(rval, &rc); // what is rc?
 }
 
 int alarm_internal_stop(void) {
