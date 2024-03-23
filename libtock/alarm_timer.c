@@ -5,7 +5,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define MAX_TICKS ~0b0U
+// #define MAX_TICKS ~0b0U
+#define MAX_TICKS 40000
 
 // Returns 0 if a <= b < c, 1 otherwise
 static int within_range(uint32_t a, uint32_t b, uint32_t c) {
@@ -146,8 +147,12 @@ static void overflow_callback(int   last_timer_fire_time,
                       void* ud) {
 
   overflow_ud_t* our_ud = (overflow_ud_t*)ud;
+  printf("\tunused is %d\n", our_ud->unused);
 
+  printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
   if (our_ud->overflows_left == 0) {
+    printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
+    printf("\tno more overflows left\n");
     alarm_at(
       last_timer_fire_time, 
       our_ud->remainder_ticks,
@@ -156,9 +161,15 @@ static void overflow_callback(int   last_timer_fire_time,
       our_ud->alarm
     );
   } else {
+    printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
+    printf("\t%d overflows left\n", our_ud->overflows_left);
 
     our_ud->overflows_left--;
 
+    printf("last timer fire time %d\n", last_timer_fire_time);
+
+    // TODO: board crashes after setting another alarm for the next overflow event.
+    // Not sure why, but it could be we're passing something wrong to alarm_at here.
     alarm_at(
       last_timer_fire_time, 
       MAX_TICKS,
@@ -174,13 +185,31 @@ int alarm_at_ms(uint32_t reference_ms, uint32_t dt_ms, subscribe_upcall cb, void
    * TODO: add a comment explaining how we are handling overflow with a chain of callbacks
   */
 
-  void* tmp_ud;
+  // overflow_ud_t tmp_ud = {
+  //   .overflows_left = dt_ms / ticks_to_ms(MAX_TICKS),
+  //   .remainder_ticks = dt_ms % ticks_to_ms(MAX_TICKS),
+  //   .unused = 0,
+  //   .original_ud = ud,
+  //   .original_cb = cb,
+  //   .alarm = alarm,
+  // };
+  overflow_ud_t* tmp_ud = malloc(sizeof(overflow_ud_t));
+  tmp_ud->overflows_left = dt_ms / ticks_to_ms(MAX_TICKS);
+  tmp_ud->remainder_ticks = dt_ms % ticks_to_ms(MAX_TICKS);
+  tmp_ud->original_ud = ud;
+  tmp_ud->original_cb = cb;
+  tmp_ud->alarm = alarm;
+
+  printf("dt_ms: %ld, max_ms: %ld\n", dt_ms, ticks_to_ms(MAX_TICKS));
+  printf("struct has %d overflows_left\n", tmp_ud->overflows_left);
+  printf("struct has %d remainder_ticks\n", tmp_ud->remainder_ticks);
 
   // TODO: handle the case if reference_ms is > 2^32 ticks
 
   uint32_t now;
   int ret = alarm_internal_read(&now);
   assert(ret == RETURNCODE_SUCCESS);
+  printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
 
   /**
    * The counter can only count up to 2^32 ticks. We might want to set a counter that's 
@@ -188,8 +217,10 @@ int alarm_at_ms(uint32_t reference_ms, uint32_t dt_ms, subscribe_upcall cb, void
    * 2^32 ticks.
   */
   if (dt_ms > ticks_to_ms(MAX_TICKS)){
-    return alarm_at(now, MAX_TICKS, (subscribe_upcall*)overflow_callback, tmp_ud, alarm);
+    printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
+    return alarm_at(now, MAX_TICKS, (subscribe_upcall*)overflow_callback, (void*)(&tmp_ud), alarm);
   } else {
+    printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
     return alarm_at(now, ms_to_ticks(dt_ms), cb, ud, alarm);
   }
 }
