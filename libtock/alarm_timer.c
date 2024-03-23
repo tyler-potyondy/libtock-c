@@ -3,6 +3,9 @@
 #include "timer.h"
 #include <limits.h>
 #include <stdlib.h>
+#include <assert.h>
+
+#define MAX_TICKS ~0b0U
 
 // Returns 0 if a <= b < c, 1 otherwise
 static int within_range(uint32_t a, uint32_t b, uint32_t c) {
@@ -114,7 +117,11 @@ uint32_t ticks_to_ms(uint32_t ticks) {
 }
 
 uint32_t ms_to_ticks(uint32_t ms) {
+  uint32_t frequency;
+  alarm_internal_frequency(&frequency);
 
+  uint32_t seconds = ms / 1000;
+  return seconds * frequency;
 }
 
 // user data to pass down if we are handling an alarm
@@ -138,7 +145,6 @@ static void overflow_callback(int   last_timer_fire_time,
                       __attribute__ ((unused)) int   unused2,
                       void* ud) {
 
-  const uint32_t max_ticks = ~0b0;
   overflow_ud_t* our_ud = (overflow_ud_t*)ud;
 
   if (our_ud->overflows_left == 0) {
@@ -155,7 +161,7 @@ static void overflow_callback(int   last_timer_fire_time,
 
     alarm_at(
       last_timer_fire_time, 
-      max_ticks,
+      MAX_TICKS,
       overflow_callback,
       our_ud,
       our_ud->alarm
@@ -167,20 +173,24 @@ int alarm_at_ms(uint32_t reference_ms, uint32_t dt_ms, subscribe_upcall cb, void
   /**
    * TODO: add a comment explaining how we are handling overflow with a chain of callbacks
   */
-  const uint32_t max_ticks = ~0b0;
 
   void* tmp_ud;
+
+  // TODO: handle the case if reference_ms is > 2^32 ticks
+
+  uint32_t now;
+  int ret = alarm_internal_read(&now);
+  assert(ret == RETURNCODE_SUCCESS);
 
   /**
    * The counter can only count up to 2^32 ticks. We might want to set a counter that's 
    * more than 2^32 ticks. Here, we check if we want to set a timer in ms that is more than
    * 2^32 ticks.
   */
-  if (dt_ms > ticks_to_ms(max_ticks)){
-    return alarm_at(ms_to_ticks(reference_ms), max_ticks, (subscribe_upcall*)overflow_callback, tmp_ud, alarm);
+  if (dt_ms > ticks_to_ms(MAX_TICKS)){
+    return alarm_at(now, MAX_TICKS, (subscribe_upcall*)overflow_callback, tmp_ud, alarm);
   } else {
-    // TODO: handle the case if reference_ms is > 2^32 ticks
-    return alarm_at(ms_to_ticks(reference_ms), ms_to_ticks(dt_ms), cb, ud, alarm);
+    return alarm_at(now, ms_to_ticks(dt_ms), cb, ud, alarm);
   }
 }
 
