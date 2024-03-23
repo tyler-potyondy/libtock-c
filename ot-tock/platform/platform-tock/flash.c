@@ -3,83 +3,102 @@
 #include <internal/nonvolatile_storage.h>
 #include <openthread/platform/flash.h>
 #include <stdio.h>
-#include <string.h>
 
-#include <app_state.h>
-#include <tock.h>
-
-#define OT_TOCK_APP_STATE_SIZE 2048
-
-struct ot_tock_app_state_t {
-    // create a continguous chunk of flash that openthread can freely write to
-    uint8_t data[OT_TOCK_APP_STATE_SIZE];
-    uint8_t swapData[OT_TOCK_APP_STATE_SIZE];
-};
-
-APP_STATE_DECLARE(struct ot_tock_app_state_t, ot_tock_app_state);
+// Force flash operations to be synchronous
+static bool done = false;
 
 // Why did @Tyler not include this?
 // uint32_t otPlatFlashGetSwapSize(otInstance *aInstance);
 
+static void read_done(int length, __attribute__((unused)) int arg1,
+                      __attribute__((unused)) int arg2, __attribute__((unused)) void *ud) {
+    // printf("\tFinished read! %i\n", length);
+    done = true;
+}
+
+static void write_done(int length, __attribute__((unused)) int arg1,
+                       __attribute__((unused)) int arg2, __attribute__((unused)) void *ud) {
+    // printf("\tFinished write! %i\n", length);
+    done = true;
+}
+
 void otPlatFlashInit(otInstance *aInstance) {
     OT_UNUSED_VARIABLE(aInstance);
-
-    // load app state from flash into memory
-    int ret;
-
-    ret = app_state_load_sync();
-    if (ret < 0) {
-        printf("Error loading application state: %s\n", tock_strrcode(ret));
-    }
+    // printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
 }
 
 void otPlatFlashErase(otInstance *aInstance, uint8_t aSwapIndex) {
     OT_UNUSED_VARIABLE(aInstance);
+    // printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
 
-    // zero out both data and swapData
-    memset(ot_tock_app_state.data, 0, OT_TOCK_APP_STATE_SIZE);
-    memset(ot_tock_app_state.swapData, 0, OT_TOCK_APP_STATE_SIZE);
+    int num_bytes;
+    nonvolatile_storage_internal_get_number_bytes(&num_bytes);
+    printf("Have %i bytes of nonvolatile storage\n", num_bytes);
+
+    // Write all zeroes to flash
+    uint8_t *zeroes = calloc(num_bytes, sizeof(uint8_t));
+
+    otPlatFlashWrite(aInstance, aSwapIndex, 0, zeroes, num_bytes);
+
+    free(zeroes);
 }
 
 void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset,
                       const void *aData, uint32_t aSize) {
     OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aSwapIndex);
+    // printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
+    int ret;
 
-    printf("OT_TOCK_FLASH: Thread wants to write %d bytes to offset %x. Swap? %d\n", aSize, aOffset, aSwapIndex);
-
-    if ((aOffset + aSize) > OT_TOCK_APP_STATE_SIZE) {
-        printf("OT_TOCK_FLASH: ERROR!!! Thread is trying to write to a region outside allocated flash area");
+    // Sets up the buffer to store the output of the read
+    ret = nonvolatile_storage_internal_write_buffer((void *)aData, aSize);
+    if (ret != RETURNCODE_SUCCESS) {
+        printf("\tERROR setting write buffer\n");
         return;
     }
 
-    if (aSwapIndex) {
-        memcpy(ot_tock_app_state.swapData + aOffset, aData, aSize);
-    } else {
-        memcpy(ot_tock_app_state.data + aOffset, aData, aSize);
+    ret = nonvolatile_storage_internal_write_done_subscribe(write_done, NULL);
+    if (ret != RETURNCODE_SUCCESS) {
+        printf("\tERROR setting write done callback\n");
+        return;
     }
 
-    // TODO: no idea if we should call this here
-    int ret = app_state_save_sync();
+    done = false;
+    ret = nonvolatile_storage_internal_write(aOffset, aSize);
     if (ret != 0) {
-        printf("OT_TOCK_FLASH: ERROR!!! saving application state: %s\n", tock_strrcode(ret));
+        printf("\tERROR calling write\n");
         return;
     }
+    // wait until callback fires
+    yield_for(&done);
 }
 
 void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, void *aData,
                      uint32_t aSize) {
     OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aSwapIndex);
+    // printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
+    int ret;
 
-    printf("OT_TOCK_FLASH: Thread wants to read %d bytes from offset %x. Swap? %d\n", aSize, aOffset, aSwapIndex);
-
-    if ((aOffset + aSize) > OT_TOCK_APP_STATE_SIZE) {
-        printf("OT_TOCK_FLASH: ERROR!!! Thread is trying to read from a region outside allocated flash area");
+    // Sets up the buffer to store the output of the read
+    ret = nonvolatile_storage_internal_read_buffer(aData, aSize);
+    if (ret != RETURNCODE_SUCCESS) {
+        printf("\tERROR setting read buffer\n");
         return;
     }
 
-    if (aSwapIndex) {
-        memcpy(aData, ot_tock_app_state.swapData + aOffset, aSize);
-    } else {
-        memcpy(aData, ot_tock_app_state.data + aOffset, aSize);
+    ret = nonvolatile_storage_internal_read_done_subscribe(read_done, NULL);
+    if (ret != RETURNCODE_SUCCESS) {
+        printf("\tERROR setting read done callback\n");
+        return;
     }
+
+    done = false;
+    ret = nonvolatile_storage_internal_read(aOffset, aSize);
+    if (ret != 0) {
+        printf("\tERROR calling read\n");
+        return;
+    }
+    // wait until callback fires
+    yield_for(&done);
 }
