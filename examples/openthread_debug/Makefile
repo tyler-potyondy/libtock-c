@@ -8,7 +8,7 @@ CFLAGS += -I$(TOCK_USERLAND_BASE_DIR)/ot-tock/openthread/include
 CFLAGS += -I$(TOCK_USERLAND_BASE_DIR)/ot-tock/openthread/src/core
 
 # Include external ot-tock static library
-EXTERN_LIBS += $(TOCK_USERLAND_BASE_DIR)/ot-tock # NOTE: If you are having a problem with `libtock-c/ot-tock/build/cortex-m4/ot-tock.a` run the script `create_ot-tock`
+# EXTERN_LIBS += $(TOCK_USERLAND_BASE_DIR)/ot-tock # NOTE: If you are having a problem with `libtock-c/ot-tock/build/cortex-m4/ot-tock.a` run the script `create_ot-tock`
 EXTERN_LIBS += $(TOCK_USERLAND_BASE_DIR)/ot-tock/platform/platform-tock
 
 # Arbitrarily set this for now. We will need to revisit this value as the default
