@@ -17,7 +17,10 @@
 #
 #  $ nix-shell shell.nix --arg disableRiscvToolchain true
 
-{ pkgs ? import <nixpkgs> {}, disableRiscvToolchain ? false, withUnfreePkgs ? false }:
+{ pkgs ? import <nixpkgs-unstable> {
+    config.allowUnfree = true;
+  config.segger-jlink.acceptLicense = true;
+}, disableRiscvToolchain ? false, withUnfreePkgs ? false }:
 
 with builtins;
 let
@@ -30,7 +33,10 @@ let
     rev = "df8823545cbdd3ef49ce3d255404b7adaef5fcfc";
     sha256 = "sha256-gl+uz+JrzZ6RRIu2r7xALtstKzhfiUENbKeNhuSNXAQ=";
   }) { inherit pkgs withUnfreePkgs; };
-
+         allowUnfree = true;
+         segger-jlink.acceptLicense = true;
+        nixpkgs.config.allowUnfree = true;
+         nixpkgs.config.segger-jlink.acceptLicense = true;
   elf2tab = pkgs.rustPlatform.buildRustPackage rec {
     name = "elf2tab-${version}";
     version = "0.11.0";
@@ -54,6 +60,12 @@ in
       gcc-arm-embedded
       python3Full
       tockloader
+      uncrustify
+
+      # ones specifically for developing openthread
+      remake
+      cmake
+      cargo
     ] ++ (lib.optionals withUnfreePkgs [
       segger-jlink
       tockloader.nrf-command-line-tools
@@ -70,7 +82,7 @@ in
             "--without-headers"
             "--disable-shared"
             "--disable-libssp"
-            "--disable-multilib"
+            "--enable-multilib"
             "--with-newlib"
           ];
           gcc_cv_libc_provides_ssp = "yes";
@@ -78,6 +90,10 @@ in
       })
     ));
 
+        permittedInsecurePackages = [
+          "segger-jlink-qt4-794a"
+        ];
+              
     shellHook = ''
       ${if (!disableRiscvToolchain) then ''
         export RISCV=1
@@ -87,3 +103,4 @@ in
       export LD_LIBRARY_PATH=${pkgs.libusb}/lib:${pkgs.segger-jlink}/lib:$LD_LIBRARY_PATH
     '';
   }
+
