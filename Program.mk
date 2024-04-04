@@ -48,3 +48,8 @@ program: $(BUILDDIR)/$(PACKAGE_NAME).tab
 .PHONY: flash
 flash: $(BUILDDIR)/$(PACKAGE_NAME).tab
 	$(FLASH)
+
+.PHONY: develop
+develop: flash
+	tockloader listen
+	

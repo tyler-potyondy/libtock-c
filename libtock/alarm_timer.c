@@ -4,6 +4,8 @@
 #include <assert.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdio.h> // TODO: remove
 
 // #define MAX_TICKS ~0b0U
 #define MAX_TICKS 40000
@@ -89,6 +91,7 @@ static void callback( __attribute__ ((unused)) int   unused0,
 }
 
 int alarm_at(uint32_t reference, uint32_t dt, subscribe_upcall cb, void* ud, alarm_t* alarm) {
+  printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
   alarm->reference = reference;
   alarm->dt        = dt;
   alarm->callback  = cb;
@@ -105,19 +108,21 @@ int alarm_at(uint32_t reference, uint32_t dt, subscribe_upcall cb, void* ud, ala
   if (root_peek() == alarm) {
     alarm_internal_subscribe((subscribe_upcall*)callback, NULL);
 
+    printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
     return alarm_internal_set(alarm->reference, alarm->dt);
   }
   return RETURNCODE_SUCCESS;
 }
 
-inline uint32_t ticks_to_ms(uint32_t ticks) {
+uint32_t ticks_to_ms(uint32_t ticks) {
   uint32_t frequency;
   alarm_internal_frequency(&frequency);
 
   return (ticks / frequency) * 1000;
 }
 
-inline uint32_t ms_to_ticks(uint32_t ms) {
+// TODO: inline
+uint32_t ms_to_ticks(uint32_t ms) {
   uint32_t frequency;
   alarm_internal_frequency(&frequency);
 
@@ -147,9 +152,10 @@ static void overflow_callback(int                          last_timer_fire_time,
                               __attribute__ ((unused)) int unused1,
                               __attribute__ ((unused)) int unused2,
                               void*                        ud) {
-
+  printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
   overflow_ud_t* our_ud = (overflow_ud_t*)ud;
-  printf("\tunused is %d\n", our_ud->unused);
+ printf("\tentered overflow callback. overflows left is %d, remainder is %d\n", our_ud->overflows_left, our_ud->remainder_ticks);
+  // printf("\tunused is %d\n", our_ud->unused);
 
   printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
   if (our_ud->overflows_left == 0) {
@@ -164,21 +170,28 @@ static void overflow_callback(int                          last_timer_fire_time,
       );
   } else {
     printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
+    our_ud->overflows_left--;
     printf("\t%d overflows left\n", our_ud->overflows_left);
 
-    our_ud->overflows_left--;
 
     printf("last timer fire time %d\n", last_timer_fire_time);
+    uint32_t time;
+    alarm_internal_read(&time);
+    printf("should be same as current time: %ld\n", time);
+
+  // overflow_ud_t* tmp_ud = malloc(sizeof(overflow_ud_t));
+  // memcpy(tmp_ud, our_ud, sizeof(overflow_ud_t));
+
 
     // TODO: board crashes after setting another alarm for the next overflow event.
     // Not sure why, but it could be we're passing something wrong to alarm_at here.
     alarm_at(
       last_timer_fire_time,
       MAX_TICKS,
-      overflow_callback,
-      our_ud,
+      (subscribe_upcall*) overflow_callback,
+      (void*) our_ud,
       our_ud->alarm
-      );
+    );
   }
 }
 
@@ -201,14 +214,14 @@ static void overflow_callback(int                          last_timer_fire_time,
 
 // Timer implementation
 int timer_in(uint32_t dt_ms, subscribe_upcall cb, void* ud, tock_timer_t *tock_timer) {
-  alarm_t* alarm = &tock_timer->alarm;
+  alarm_t* alarm = &(tock_timer->alarm);
   /**
    * TODO: add a comment explaining how we are handling overflow with a chain of callbacks
    */
 
   overflow_ud_t* tmp_ud = malloc(sizeof(overflow_ud_t));
   tmp_ud->overflows_left  = dt_ms / ticks_to_ms(MAX_TICKS);
-  tmp_ud->remainder_ticks = dt_ms % ticks_to_ms(MAX_TICKS);
+  tmp_ud->remainder_ticks = ms_to_ticks(dt_ms % ticks_to_ms(MAX_TICKS));
   tmp_ud->original_ud     = ud;
   tmp_ud->original_cb     = cb;
   tmp_ud->alarm = alarm;
@@ -236,7 +249,7 @@ int timer_in(uint32_t dt_ms, subscribe_upcall cb, void* ud, tock_timer_t *tock_t
    */
   if (dt_ms > ticks_to_ms(MAX_TICKS)) {
     printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
-    return alarm_at(now, MAX_TICKS, (subscribe_upcall*)overflow_callback, (void*)(&tmp_ud), alarm);
+    return alarm_at(now, MAX_TICKS, (subscribe_upcall*)overflow_callback, (void*)(tmp_ud), alarm);
   } else {
     // No overflows needed
     printf("%s:%d in %s\n", __FILE__, __LINE__, __func__);
@@ -339,6 +352,7 @@ int yield_for_with_timeout(bool* cond, uint32_t ms) {
   return RETURNCODE_SUCCESS;
 }
 
+// TODO: this is not ticks
 int gettimeasticks(struct timeval *tv, __attribute__ ((unused)) void *tzvp)
 {
   uint32_t frequency, now, seconds, remainder;
