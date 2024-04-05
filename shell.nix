@@ -5,17 +5,11 @@
 #  * `tockloader`
 #  * arm-none-eabi toolchain
 #  * elf2tab
-#  * (optionally) riscv32-embedded toolchain
+#  * riscv32-embedded toolchain
 #
 # To use:
 #
 #  $ nix-shell
-#
-# The RISC-V toolchain can be disabled optionally. This will further
-# prevent RISC-V specific environment variables from being set in the
-# Nix shell environment:
-#
-#  $ nix-shell shell.nix --arg disableRiscvToolchain true
 
 { pkgs ? import <nixpkgs-unstable> {
     config.allowUnfree = true;
@@ -26,12 +20,11 @@ with builtins;
 let
   inherit (pkgs) stdenv stdenvNoCC lib;
 
-  # Tockloader v1.11.0pre-git
   tockloader = import (pkgs.fetchFromGitHub {
     owner = "tock";
     repo = "tockloader";
-    rev = "df8823545cbdd3ef49ce3d255404b7adaef5fcfc";
-    sha256 = "sha256-gl+uz+JrzZ6RRIu2r7xALtstKzhfiUENbKeNhuSNXAQ=";
+    rev = "v1.11.0";
+    sha256 = "sha256-bPEfpfOZOjOiazqRgn1cnqe4ohLPvocuENKoZx/Qw80=";
   }) { inherit pkgs withUnfreePkgs; };
          allowUnfree = true;
          segger-jlink.acceptLicense = true;
@@ -39,23 +32,22 @@ let
          nixpkgs.config.segger-jlink.acceptLicense = true;
   elf2tab = pkgs.rustPlatform.buildRustPackage rec {
     name = "elf2tab-${version}";
-    version = "0.11.0";
+    version = "0.12.0";
 
     src = pkgs.fetchFromGitHub {
       owner = "tock";
       repo = "elf2tab";
       rev = "v${version}";
-      sha256 = "sha256-cjDFi9vaD9O2oVtGAapvvHrA+yUe17teoVzTso2enpI=";
+      sha256 = "sha256-+VeWLBI6md399Oaumt4pJrOkm0Nz7fmpXN2TjglUE34=";
     };
 
-    cargoSha256 = "sha256-KGPp6Dx1aUX8XILfV8kbiXKinoBVkEmBRxD9mWrsVNk=";
+    cargoSha256 = "sha256-UHAwk1fBcabRqy7VMhz4aoQuIur+MQshDOhC7KFyGm4=";
   };
 in
   pkgs.mkShell {
     name = "tock-dev";
 
     buildInputs = with pkgs; [
-      nrf-command-line-tools
       elf2tab
       gcc-arm-embedded
       python3Full

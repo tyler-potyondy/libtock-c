@@ -27,7 +27,7 @@ ifeq ($(strip $($(LIBNAME)_SRCS)),)
 endif
 
 # directory for built output
-$(LIBNAME)_BUILDDIR ?= $($(LIBNAME)_DIR)/build
+$(LIBNAME)_BUILDDIR := $($(LIBNAME)_DIR)/build
 
 # Handle complex paths.
 #
@@ -101,8 +101,8 @@ $$($(LIBNAME)_BUILDDIR)/$(1):
 
 $$($(LIBNAME)_BUILDDIR)/$(1)/%.o: %.c | $$($(LIBNAME)_BUILDDIR)/$(1) newlib-$$(NEWLIB_VERSION_$(1))
 	$$(TRACE_CC)
-	$$(Q)$$(TOOLCHAIN_$(1))$$(CC_$(1)) $$(CFLAGS) $$(CFLAGS_$(1)) $$(CPPFLAGS) $$(CPPFLAGS_$(1)) -MF"$$(@:.o=.d)" -MG -MM -MP -MT"$$(@:.o=.d)@" -MT"$$@" "$$<"
-	$$(Q)$$(TOOLCHAIN_$(1))$$(CC_$(1)) $$(CFLAGS) $$(CFLAGS_$(1)) $$(CPPFLAGS) $$(CPPFLAGS_$(1)) -c -o $$@ $$<
+	$$(Q)$$(TOOLCHAIN_$(1))$$(CC_$(1)) $$(CFLAGS) $$(CFLAGS_$(1)) $$(CPPFLAGS) $$(CPPFLAGS_$(1)) $$(CPPFLAGS_$(LIBNAME)) -MF"$$(@:.o=.d)" -MG -MM -MP -MT"$$(@:.o=.d)@" -MT"$$@" "$$<"
+	$$(Q)$$(TOOLCHAIN_$(1))$$(CC_$(1)) $$(CFLAGS) $$(CFLAGS_$(1)) $$(CPPFLAGS) $$(CPPFLAGS_$(1)) $$(CPPFLAGS_$(LIBNAME)) -c -o $$@ $$<
 
 $$($(LIBNAME)_BUILDDIR)/$(1)/%.o: %.S | $$($(LIBNAME)_BUILDDIR)/$(1) newlib-$$(NEWLIB_VERSION_$(1))
 	$$(TRACE_AS)
@@ -150,7 +150,7 @@ LIBS_$(1) += $$($(LIBNAME)_BUILDDIR)/$(1)/$(LIBNAME).a
 endef
 
 # uncomment to print generated rules
-# $(info $(foreach platform,$(TOCK_ARCHS), $(call LIB_RULES,$(call ARCH_FN,$(platform)))))
+# $(info $(foreach platform,$(TOCK_ARCHS), $(call LIB_RULES,$(arch))))
 # actually generate the rules for each architecture
 $(foreach arch,$(TOCK_ARCHS),$(eval $(call LIB_RULES,$(arch))))
 
