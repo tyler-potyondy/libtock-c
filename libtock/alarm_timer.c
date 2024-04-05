@@ -9,6 +9,22 @@ static int within_range(uint32_t a, uint32_t b, uint32_t c) {
   return (b - a) < (b - c);
 }
 
+inline static uint32_t ticks_to_ms(uint32_t ticks) {
+  uint32_t frequency;
+  alarm_internal_frequency(&frequency);
+  return (ticks / frequency) * 1000;
+}
+
+inline static uint32_t ms_to_ticks(uint32_t ms) {
+  uint32_t frequency;
+  alarm_internal_frequency(&frequency);
+
+  uint32_t millihertz      = frequency / 1000; // ticks per millisecond
+  uint32_t seconds         = ms / 1000;
+  uint32_t leftover_millis = ms % 1000;
+  return (seconds * frequency) + (leftover_millis * millihertz);
+}
+
 static alarm_t* root = NULL;
 
 static void root_insert(alarm_t* alarm) {
@@ -106,6 +122,79 @@ int alarm_at(uint32_t reference, uint32_t dt, subscribe_upcall cb, void* ud, ala
   return RETURNCODE_SUCCESS;
 }
 
+// Holds original callback and user data. Also keeps bookkeeping for the
+// intermediate alarm overflows.
+typedef struct overflow_ud {
+  // How many times the alarm has left to overflow before reaching target time
+  int overflows_left;
+  // Number of remaining ticks after last full alarm overflow
+  int remainder_ticks;
+  // Original user data passed to `timer_in`
+  void* original_ud;
+  // Original callback passed to `timer_in`
+  subscribe_upcall* original_cb;
+  alarm_t* alarm;
+} overflow_ud_t;
+
+// The intermediate callback that handles overflows of alarm. This is used by
+// `timer_in` to handle cases where `alarm_at` would normally be unable to
+// support the whole timer length. `alarm_at` can only keep track of up to 2^32
+// ticks.
+static void overflow_callback(int                          last_timer_fire_time,
+                              __attribute__ ((unused)) int unused1,
+                              __attribute__ ((unused)) int unused2,
+                              void*                        overflow_ud) {
+  overflow_ud_t* ud = (overflow_ud_t*)overflow_ud;
+
+  if (ud->overflows_left == 0) {
+    // no overflows left, schedule last alarm with original callback
+    alarm_at(
+      last_timer_fire_time,
+      ud->remainder_ticks,
+      ud->original_cb,
+      ud->original_ud,
+      ud->alarm
+      );
+  } else {
+    // schedule next intermediate alarm that will overflow
+    ud->overflows_left--;
+
+    alarm_at(
+      last_timer_fire_time,
+      UINT_MAX,
+      (subscribe_upcall*) overflow_callback,
+      (void*) overflow_ud,
+      ud->alarm
+      );
+  }
+}
+
+// Timer implementation
+int timer_in(uint32_t dt_ms, subscribe_upcall cb, void* ud, tock_timer_t *tock_timer) {
+  alarm_t* alarm = &(tock_timer->alarm);
+  uint32_t now;
+  int ret = alarm_internal_read(&now);
+  if (ret != RETURNCODE_SUCCESS) return ret;
+
+  // If `dt_ms` is longer than the time that an alarm can count up to, then `timer_in` will
+  // schedule multiple alarms to reach the full length. We calculate the number of full overflows
+  // and the remainder ticks to reach the target length of time. The overflows use the
+  // `overflow_callback` for each intermediate overflow.
+  if (dt_ms > ticks_to_ms(UINT_MAX)) {
+    overflow_ud_t* tmp_ud = malloc(sizeof(overflow_ud_t));
+    tmp_ud->overflows_left  = dt_ms / ticks_to_ms(UINT_MAX);
+    tmp_ud->remainder_ticks = ms_to_ticks(dt_ms % ticks_to_ms(UINT_MAX));
+    tmp_ud->original_ud     = ud;
+    tmp_ud->original_cb     = cb;
+    tmp_ud->alarm = alarm;
+
+    return alarm_at(now, UINT_MAX, (subscribe_upcall*)overflow_callback, (void*)(tmp_ud), alarm);
+  } else {
+    // No overflows needed
+    return alarm_at(now, ms_to_ticks(dt_ms), cb, ud, alarm);
+  }
+}
+
 void alarm_cancel(alarm_t* alarm) {
   if (alarm->prev != NULL) {
     alarm->prev->next = alarm->next;
@@ -123,18 +212,6 @@ void alarm_cancel(alarm_t* alarm) {
 
   alarm->prev = NULL;
   alarm->next = NULL;
-
-}
-
-// Timer implementation
-
-int timer_in(uint32_t ms, subscribe_upcall cb, void* ud, tock_timer_t *timer) {
-  uint32_t frequency;
-  alarm_internal_frequency(&frequency);
-  uint32_t interval = (ms / 1000) * frequency + (ms % 1000) * (frequency / 1000);
-  uint32_t now;
-  alarm_internal_read(&now);
-  return alarm_at(now, interval, cb, ud, &timer->alarm);
 }
 
 static void repeating_upcall( uint32_t                     now,
@@ -150,9 +227,7 @@ static void repeating_upcall( uint32_t                     now,
 }
 
 void timer_every(uint32_t ms, subscribe_upcall cb, void* ud, tock_timer_t* repeating) {
-  uint32_t frequency;
-  alarm_internal_frequency(&frequency);
-  uint32_t interval = (ms / 1000) * frequency + (ms % 1000) * (frequency / 1000);
+  uint32_t interval = ms_to_ticks(ms);
 
   repeating->interval = interval;
   repeating->cb       = cb;
