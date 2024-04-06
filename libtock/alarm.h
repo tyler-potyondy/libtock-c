@@ -54,32 +54,17 @@ typedef struct alarm {
  * the alarm is outstanding. `reference` and `dt` are in terms of the tick
  * time.
  *
+ * Alarms longer than 2^32 ticks should use `timer_in`.
+ *
  * \param reference: the reference time from which the alarm is being set in ticks
  * \param dt: the time after reference that the alarm should fire in ticks
  * \param callback a callback to be invoked when the alarm expires.
  * \param userdata passed to the callback.
- * \param a pointer to a new alarm_t to be used by the implementation to keep
+ * \param alarm a pointer to a new alarm_t to be used by the implementation to keep
  *        track of the alarm.
  * \return An error code. Either RETURNCODE_SUCCESS or RETURNCODE_FAIL.
  */
-int alarm_at(uint32_t reference, uint32_t dt, subscribe_upcall, void*, alarm_t *alarm);
-
-/** \brief Create a new alarm to fire some number of milliseconds from a .
- *
- * The `alarm` parameter is allocated by the caller and must live as long as
- * the alarm is outstanding. `reference` and `dt` are in terms of the tick
- * time.
- * Fine grained timers should use `alarm_at`. Explain why this has less precision.
- *
- * \param reference_ms: the reference time from which the alarm is being set
- * \param dt_ms: the time after reference that the alarm should fire
- * \param callback a callback to be invoked when the alarm expires.
- * \param userdata passed to the callback.
- * \param a pointer to a new alarm_t to be used by the implementation to keep
- *        track of the alarm.
- * \return An error code. Either RETURNCODE_SUCCESS or RETURNCODE_FAIL.
- */
-int alarm_at_ms(uint32_t reference_ms, uint32_t dt_ms, subscribe_upcall, void*, alarm_t *alarm);
+int alarm_at(uint32_t reference, uint32_t dt, subscribe_upcall callback, void* userdata, alarm_t *alarm);
 
 /** \brief Cancels an existing alarm.
  *
