@@ -12,7 +12,14 @@ static int within_range(uint32_t a, uint32_t b, uint32_t c) {
 inline static uint32_t ticks_to_ms(uint32_t ticks) {
   uint32_t frequency;
   alarm_internal_frequency(&frequency);
-  return (ticks / frequency) * 1000;
+
+  uint32_t seconds = (ticks / frequency);
+  uint32_t milliseconds_per_second = 1000;
+
+  uint32_t leftover_ticks = ticks % frequency;
+  uint32_t millihertz     = frequency / 1000;  // ticks per millisecond
+
+  return (seconds * milliseconds_per_second) + (leftover_ticks / millihertz);
 }
 
 inline static uint32_t ms_to_ticks(uint32_t ms) {
@@ -161,7 +168,7 @@ static void overflow_callback(int                          last_timer_fire_time,
 
     alarm_at(
       last_timer_fire_time,
-      UINT_MAX,
+      UINT32_MAX,
       (subscribe_upcall*) overflow_callback,
       (void*) overflow_ud,
       ud->alarm
@@ -180,15 +187,15 @@ int timer_in(uint32_t dt_ms, subscribe_upcall cb, void* ud, tock_timer_t *tock_t
   // schedule multiple alarms to reach the full length. We calculate the number of full overflows
   // and the remainder ticks to reach the target length of time. The overflows use the
   // `overflow_callback` for each intermediate overflow.
-  if (dt_ms > ticks_to_ms(UINT_MAX)) {
+  if (dt_ms > ticks_to_ms(UINT32_MAX)) {
     overflow_ud_t* tmp_ud = malloc(sizeof(overflow_ud_t));
-    tmp_ud->overflows_left  = dt_ms / ticks_to_ms(UINT_MAX);
-    tmp_ud->remainder_ticks = ms_to_ticks(dt_ms % ticks_to_ms(UINT_MAX));
+    tmp_ud->overflows_left  = dt_ms / ticks_to_ms(UINT32_MAX);
+    tmp_ud->remainder_ticks = ms_to_ticks(dt_ms % ticks_to_ms(UINT32_MAX));
     tmp_ud->original_ud     = ud;
     tmp_ud->original_cb     = cb;
     tmp_ud->alarm = alarm;
 
-    return alarm_at(now, UINT_MAX, (subscribe_upcall*)overflow_callback, (void*)(tmp_ud), alarm);
+    return alarm_at(now, UINT32_MAX, (subscribe_upcall*)overflow_callback, (void*)(tmp_ud), alarm);
   } else {
     // No overflows needed
     return alarm_at(now, ms_to_ticks(dt_ms), cb, ud, alarm);
