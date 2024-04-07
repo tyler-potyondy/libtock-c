@@ -4,6 +4,8 @@
 #include <limits.h>
 #include <stdlib.h>
 
+#define MAX_TICKS UINT32_MAX
+
 // Returns 0 if a <= b < c, 1 otherwise
 static int within_range(uint32_t a, uint32_t b, uint32_t c) {
   return (b - a) < (b - c);
@@ -168,7 +170,7 @@ static void overflow_callback(int                          last_timer_fire_time,
 
     alarm_at(
       last_timer_fire_time,
-      UINT32_MAX,
+      MAX_TICKS,
       (subscribe_upcall*) overflow_callback,
       (void*) overflow_ud,
       ud->alarm
@@ -187,15 +189,15 @@ int timer_in(uint32_t dt_ms, subscribe_upcall cb, void* ud, tock_timer_t *tock_t
   // schedule multiple alarms to reach the full length. We calculate the number of full overflows
   // and the remainder ticks to reach the target length of time. The overflows use the
   // `overflow_callback` for each intermediate overflow.
-  if (dt_ms > ticks_to_ms(UINT32_MAX)) {
+  if (dt_ms > ticks_to_ms(MAX_TICKS)) {
     overflow_ud_t* tmp_ud = malloc(sizeof(overflow_ud_t));
-    tmp_ud->overflows_left  = dt_ms / ticks_to_ms(UINT32_MAX);
-    tmp_ud->remainder_ticks = ms_to_ticks(dt_ms % ticks_to_ms(UINT32_MAX));
+    tmp_ud->overflows_left  = dt_ms / ticks_to_ms(MAX_TICKS);
+    tmp_ud->remainder_ticks = ms_to_ticks(dt_ms % ticks_to_ms(MAX_TICKS));
     tmp_ud->original_ud     = ud;
     tmp_ud->original_cb     = cb;
     tmp_ud->alarm = alarm;
 
-    return alarm_at(now, UINT32_MAX, (subscribe_upcall*)overflow_callback, (void*)(tmp_ud), alarm);
+    return alarm_at(now, MAX_TICKS, (subscribe_upcall*)overflow_callback, (void*)(tmp_ud), alarm);
   } else {
     // No overflows needed
     return alarm_at(now, ms_to_ticks(dt_ms), cb, ud, alarm);
