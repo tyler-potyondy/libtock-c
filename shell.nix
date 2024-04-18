@@ -53,6 +53,7 @@ in
       python3Full
       tockloader
       uncrustify
+cmake
 
       # ones specifically for developing openthread
       remake
