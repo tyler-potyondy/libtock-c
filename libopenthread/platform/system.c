@@ -97,6 +97,7 @@ void otSysInit(int argc, char *argv[]){
   // TODO
   OT_UNUSED_VARIABLE(argc);
   OT_UNUSED_VARIABLE(argv);
+  init_otPlatAlarm(); 
 }
 
 bool otSysPseudoResetWasRequested(void) {

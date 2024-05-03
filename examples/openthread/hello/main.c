@@ -1,5 +1,6 @@
 #include <assert.h>
 
+#include <openthread/platform/alarm-milli.h>
 #include <openthread-system.h>
 #include <openthread/dataset_ftd.h>
 #include <openthread/instance.h>
@@ -76,15 +77,19 @@ int main( __attribute__((unused)) int argc, __attribute__((unused)) char *argv[]
   #endif
 
   /* Start the Thread stack (CLI cmd -> thread start) */
-  otThreadSetEnabled(instance, true);
+//  otThreadSetEnabled(instance, true);
 
+  uint32_t time;
   for ( ;;) {
-    otTaskletsProcess(instance);
-    otSysProcessDrivers(instance);
+  	time = otPlatAlarmMilliGetNow();
+	delay_ms(1000);
+	printf("%ld\n", time);
+	//  otTaskletsProcess(instance);
+    //otSysProcessDrivers(instance);
 
-    if (!otTaskletsArePending(instance)) {
-      yield();
-    }
+   // if (!otTaskletsArePending(instance)) {
+    //  yield();
+    //}
 
 #if ENABLE_UDP_SEND
     sendUdp(instance);

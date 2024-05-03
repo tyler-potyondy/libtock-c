@@ -13,3 +13,5 @@ typedef struct {
     int read_index;
     bool new;
 } ring_buffer;
+
+void init_otPlatAlarm(void);
