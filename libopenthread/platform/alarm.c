@@ -8,7 +8,8 @@
 
 static alarm_t alarm;
 static tock_timer_t timer_wrap;
-uint32_t wrap_value = 0;
+uint32_t wrap_point = 0;
+uint32_t wrap_count;
 uint32_t prev_time_value;
 
 static void callback(int __attribute__((unused)) now, int __attribute__((unused)) interval, int __attribute__(
@@ -69,7 +70,7 @@ void init_otPlatAlarm(void) {
                         uint32_t frequency;
                         alarm_internal_frequency(&frequency);
                         //wrap_value = (UINT32_MAX) / frequency;
-                        wrap_value = 500*1000;
+                        wrap_point = 512*1000;
 			prev_time_value = otPlatAlarmMilliGetNow();
 	// timer will wrap at 2^32 so we set an alarm to go off at 2^30 
 	// (cancel/reset this if milligetnow called)
@@ -107,11 +108,13 @@ uint32_t otPlatAlarmMilliGetNow(void) {
 
     if (nowMilli32bit < prev_time_value) {
     		printf("wrap occured...\n:");
-	    nowMilli32bit += ((prev_time_value / wrap_value) + 1) * wrap_value;
+    		wrap_count++;
     }
-
+    
     prev_time_value = nowMilli32bit;
-  timer_in(wrap_value >> 2, wrap_time_upcall, NULL, &timer_wrap); 
+    nowMilli32bit += wrap_count * wrap_point;
+
+  timer_in(wrap_point >> 1, wrap_time_upcall, NULL, &timer_wrap); 
 
   return nowMilli32bit;
 }
