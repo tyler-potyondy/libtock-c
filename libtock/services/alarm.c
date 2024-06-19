@@ -200,7 +200,7 @@ void libtock_alarm_cancel(libtock_alarm_t* alarm) {
 static void overflow_callback(__attribute__ ((unused)) uint32_t now,
                               uint32_t                          last_timer_fire_time,
                               void*                             overflow_ud) {
-  libtock_alarm_repeating_t* tock_timer = (libtock_alarm_repeating_t*)overflow_ud;
+  libtock_alarm_data_t* tock_timer = (libtock_alarm_data_t*)overflow_ud;
 
   if (tock_timer->overflows_left == 0) {
     // no overflows left, schedule last alarm with original callback
@@ -221,7 +221,7 @@ static void overflow_callback(__attribute__ ((unused)) uint32_t now,
   }
 }
 
-int libtock_alarm_in_ms(uint32_t ms, libtock_alarm_callback cb, void* opaque, libtock_alarm_repeating_t* alarm) {
+int libtock_alarm_in_ms(uint32_t ms, libtock_alarm_callback cb, void* opaque, libtock_alarm_data_t* alarm) {
   uint32_t now;
   int ret = libtock_alarm_command_read(&now);
   if (ret != RETURNCODE_SUCCESS) return ret;
@@ -250,7 +250,7 @@ int libtock_alarm_in_ms(uint32_t ms, libtock_alarm_callback cb, void* opaque, li
 }
 
 static void alarm_repeating_cb(uint32_t now, __attribute__ ((unused)) uint32_t scheduled, void* opaque) {
-  libtock_alarm_repeating_t* repeating = (libtock_alarm_repeating_t*) opaque;
+  libtock_alarm_data_t* repeating = (libtock_alarm_data_t*) opaque;
   uint32_t interval_ms = repeating->interval_ms;
   // It's possible for the call to ms_to_ticks to overflow if interval_ms is greater
   // than 2^32 ticks, but the wraparound gives use the expiration time we want.
@@ -262,7 +262,7 @@ static void alarm_repeating_cb(uint32_t now, __attribute__ ((unused)) uint32_t s
 
 
 void libtock_alarm_repeating_every_ms(uint32_t ms, libtock_alarm_callback cb, void* opaque,
-                                      libtock_alarm_repeating_t* repeating) {
+                                      libtock_alarm_data_t* repeating) {
   repeating->interval_ms = ms;
   repeating->callback    = cb;
   repeating->user_data   = opaque;
@@ -270,9 +270,8 @@ void libtock_alarm_repeating_every_ms(uint32_t ms, libtock_alarm_callback cb, vo
   libtock_alarm_in_ms(ms, (libtock_alarm_callback)alarm_repeating_cb, (void*)repeating, repeating);
 }
 
-// TODO: should there also be a cancel called `libtock_alarm_in_ms_cancel`
-void libtock_alarm_repeating_cancel(libtock_alarm_repeating_t* repeating) {
-  libtock_alarm_cancel(&repeating->alarm);
+void libtock_alarm_ms_cancel(libtock_alarm_data_t* alarm) {
+  libtock_alarm_cancel(&alarm->alarm);
 }
 
 int libtock_alarm_gettimeasticks(struct timeval* tv, __attribute__ ((unused)) void* tzvp) {

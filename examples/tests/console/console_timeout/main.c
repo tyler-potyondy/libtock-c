@@ -8,7 +8,7 @@
 
 char buf[100];
 
-libtock_alarm_t t;
+libtock_alarm_data_t t;
 
 static void getnstr_cb(returncode_t result __attribute__ ((unused)),
                        uint32_t     len) {

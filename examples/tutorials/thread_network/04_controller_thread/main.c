@@ -32,8 +32,8 @@ bool network_up = false;
 // Callback event indicator
 bool callback_event = false;
 
-libtock_alarm_t read_temperature_timer;
-// libtock_alarm_t network_timer;
+libtock_alarm_data_t read_temperature_timer;
+// libtock_alarm_data_t network_timer;
 
 // We use this variable as a buffer that is naturally aligned to the int
 // alignment, and has an alignment >= its size.

@@ -2,7 +2,7 @@
  * This module allows the client to initiate alarms and receive
  * callbacks when those alarms have expired. Clients can set one-shot alarms to
  * fire at particular clock values (`libtock_alarm_at`) or periodic alarms
- * (`libtock_alarm_repeating_every`)
+ * (`libtock_alarm_repeating_every_ms`)
  *
  * The client should not assume anything about the underlying clock used by an
  * implementation other than that it is running at sufficient frequency to
@@ -47,9 +47,10 @@ typedef struct alarm {
 
 /** \brief Opaque handle to a repeating alarm.
  *
- * An opaque handle to a repeating alarm created by `libtock_alarm_repeating_every`.
+ * An opaque handle to an alarm created by `libtock_alarm_repeating_every_ms`
+ * and `libtock_alarm_in_ms`.
  */
-typedef struct alarm_repeating {
+typedef struct alarm_data {
   // Length of timer in milliseconds.
   uint32_t interval_ms;
   // Number of times the underlying counter will overflow
@@ -61,7 +62,7 @@ typedef struct alarm_repeating {
   libtock_alarm_callback callback;
   void* user_data;
   libtock_alarm_t alarm;
-} libtock_alarm_repeating_t;
+} libtock_alarm_data_t;
 
 
 /** \brief Create a new alarm to fire at a particular clock value.
@@ -89,7 +90,7 @@ int libtock_alarm_at(uint32_t reference, uint32_t dt, libtock_alarm_callback cal
  *
  * \param alarm
  */
-void libtock_alarm_cancel(libtock_alarm_t*);
+void libtock_alarm_cancel(libtock_alarm_t* alarm);
 
 // Use this to implement _gettimeofday yourself as libtock-c doesn't provide
 // an implementation.
@@ -118,7 +119,7 @@ int libtock_alarm_gettimeasticks(struct timeval* tv, void* tzvp);
  * \param alarm handle to the alarm that was created.
  * \return An error code. Either RETURNCODE_SUCCESS or RETURNCODE_FAIL.
  */
-int libtock_alarm_in_ms(uint32_t ms, libtock_alarm_callback cb, void* opaque, libtock_alarm_repeating_t* alarm);
+int libtock_alarm_in_ms(uint32_t ms, libtock_alarm_callback cb, void* opaque, libtock_alarm_data_t* alarm);
 
 /** \brief Create a new repeating alarm to fire every `ms` milliseconds.
  *
@@ -128,17 +129,17 @@ int libtock_alarm_in_ms(uint32_t ms, libtock_alarm_callback cb, void* opaque, li
  * \param ms the interval to fire the alarm at in milliseconds.
  * \param cb a callback to be invoked when the alarm expires.
  * \param opaque pointer passed to the callback.
- * \param alarm_repeating pointer to a new alarm_repeating_t to be used by the implementation to
+ * \param alarm_repeating pointer to a new libtock_alarm_data_t to be used by the implementation to
  *        keep track of the alarm.
  */
 void libtock_alarm_repeating_every_ms(uint32_t ms, libtock_alarm_callback cb, void* opaque,
-                                      libtock_alarm_repeating_t* alarm_repeating);
+                                      libtock_alarm_data_t* alarm);
 
 /** \brief Cancels an existing repeating alarm.
  *
- * \param alarm_repeating
+ * \param alarm
  */
-void libtock_alarm_repeating_cancel(libtock_alarm_repeating_t* alarm_repeating);
+void libtock_alarm_ms_cancel(libtock_alarm_data_t* alarm);
 
 #ifdef __cplusplus
 }
