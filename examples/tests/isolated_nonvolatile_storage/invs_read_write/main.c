@@ -51,6 +51,10 @@ static int test_all(void) {
   printf("Write starts before start region, should fail (offset %d)\n", -1);
   if ((r = test(readbuf, 512, writebuf, 512, -1)) == 0) return -1;
 
+  // The current kernel buffer is 512 bytes, so we can only write and read up to that size.
+  printf("Write and read are longer than 512 bytes, should fail\n");
+  if ((r = test(readbuf, 1024, writebuf, 1024, 0)) == 0) return -1;
+
   return 0;
 }
 
